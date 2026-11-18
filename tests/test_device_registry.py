@@ -1274,3 +1274,14 @@ def test_sgs01b_jr_descriptor_matches_the_sgs01_plant_sensor() -> None:
     assert product.entities == reference.entities
     assert product.device_name == "SGS01B-JR Soil Sensor"
     assert product.model_name == "gpkyrocn"
+
+
+def test_xdd_ceiling_light_uses_the_dj_light_mapping() -> None:
+    """``xdd`` ceiling lights use the same standard light DPs 20-24 as ``dj``.
+
+    Seen on an "IR RGBCW Smart Light" (``xdd``/``hzfthu7qdl7ordsx``) whose cloud
+    schema is switch_led 20, work_mode 21, bright_value 22 (10-1000),
+    temp_value 23 (0-1000) and colour_data 24.
+    """
+    defaults = get_registry().category_defaults
+    assert defaults["xdd"]["light"] == defaults["dj"]["light"]
