@@ -172,6 +172,36 @@ def test_v4_null_padding() -> None:
     assert info.uuid == "identity"
 
 
+def test_classic_product_key_record() -> None:
+    """Decode classic A201 records with product type 1 (product key)."""
+    key = hashlib.md5(b"keyabcdefghijklm", usedforsecurity=False).digest()
+    encrypted = AES.new(key, AES.MODE_CBC, key).encrypt(b"1234567890abcdef")
+    info = decode_tuya_ble_advertisement(
+        advertisement(
+            b"\x01keyabcdefghijklm", b"\x89\x03" + bytes(4) + encrypted, SERVICE_UUID
+        )
+    )
+    assert info is not None
+    assert info.uuid == "1234567890abcdef"
+    assert info.product_id is None
+    assert info.is_bound
+    assert info.protocol_version == 3
+
+
+def test_classic_unknown_product_type() -> None:
+    """Reject classic A201 records with an unknown product type."""
+    key = hashlib.md5(b"abcdefgh", usedforsecurity=False).digest()
+    encrypted = AES.new(key, AES.MODE_CBC, key).encrypt(b"1234567890abcdef")
+    assert (
+        decode_tuya_ble_advertisement(
+            advertisement(
+                b"\x02abcdefgh", b"\x80\x03" + bytes(4) + encrypted, SERVICE_UUID
+            )
+        )
+        is None
+    )
+
+
 @pytest.mark.parametrize("version", [0, 4, 5, 6])
 def test_classic_unknown_version(version: int) -> None:
     """Classic layout must not silently accept v4/v5 manufacturer headers."""
